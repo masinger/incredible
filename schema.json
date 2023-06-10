@@ -1,0 +1,98 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/masinger/incredible/schema.json",
+  "title": "Incredible settings file",
+  "type": "object",
+  "properties": {
+    "assets": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "src": {
+            "oneOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "bitwarden": {
+                    "oneOf": [
+                      {
+                        "type:": "object",
+                        "properties": {
+                          "entry": { "type": "string" },
+                          "attachment": { "type": "string" }
+                        },
+                        "additionalProperties": false,
+                        "required": ["entry", "attachment"]
+                      },
+                      {
+                        "type": "object",
+                        "properties": {
+                          "entry": { "type": "string" },
+                          "field": {
+                            "type": "string",
+                            "enum": [ "username", "password" ],
+                            "default": "password"
+                          }
+                        },
+                        "additionalProperties": false,
+                        "required": ["entry"]
+                      }
+                    ]
+                  }
+                },
+                "additionalProperties": false,
+                "required": "bitwarden"
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "azureKeyVaultSecret": {
+                    "type": "object",
+                    "properties": {
+                      "itemId": {
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "itemId"
+                    ]
+                  }
+                },
+                "additionalProperties": false,
+                "required": [
+                  "azureKeyVaultSecret"
+                ]
+              }
+            ]
+          },
+          "mappings": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "oneOf": [
+                {
+                  "type": "object",
+                  "properties": {
+                    "env": {
+                      "type": "object",
+                      "properties": {
+                        "name": {
+                          "type": "string"
+                        }
+                      }
+                    }
+                  }
+                }
+              ]
+            }
+          }
+        },
+        "required": ["src", "mappings"]
+      }
+    }
+  },
+  "required": [
+    "assets"
+  ]
+}
