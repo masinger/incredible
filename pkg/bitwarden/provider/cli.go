@@ -43,12 +43,10 @@ func (b CliClient) activeSession() (string, error) {
 }
 
 func (b CliClient) getItem(sessionKey string, itemId string) (*Item, error) {
-	jsonString, err := b.Cli.RunReadStdout(
+	jsonString, err := b.Cli.WithEnv("BW_SESSION", sessionKey).RunReadStdout(
 		"get",
 		"item",
 		itemId,
-		"--session",
-		sessionKey,
 		"--raw",
 	)
 	if err != nil {
@@ -67,14 +65,12 @@ func (b CliClient) readAttachment(
 	itemId string,
 	attachmentName string,
 ) (io.Reader, error) {
-	return b.Cli.RunRedirectStdout(
+	return b.Cli.WithEnv("BW_SESSION", sessionKey).RunRedirectStdout(
 		"get",
 		"attachment",
 		attachmentName,
 		"--itemid",
 		itemId,
 		"--raw",
-		"--session",
-		sessionKey,
 	)
 }
