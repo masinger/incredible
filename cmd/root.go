@@ -4,9 +4,11 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/masinger/incredible/internal/interactive"
 	"github.com/masinger/incredible/internal/interactive/pterm"
 	zap2 "github.com/masinger/incredible/internal/interactive/zap"
 	"github.com/masinger/incredible/pkg/execution"
+	customizer "github.com/masinger/incredible/pkg/execution/customizer"
 	"github.com/masinger/incredible/pkg/logging"
 	"github.com/masinger/incredible/pkg/provider"
 	"github.com/masinger/incredible/pkg/specs/loader"
@@ -19,6 +21,15 @@ import (
 var debug bool
 var nonInteractive bool
 var executionOptions = execution.Options{}
+
+var runNested = interactive.Confirmation{
+	Message: `It seems like you are trying to run incredible within a process that has already been started by incredible.
+
+Do you wish to continue?`,
+	Default: true,
+}
+
+const incredibleSessionEnvironmentVariableName = "INCREDIBLE_SESSION"
 
 var rootCmd = &cobra.Command{
 	Use: "incredible <CMD>",
@@ -58,8 +69,17 @@ secret itself or pointing to a file containing it.`,
 		return nil
 	},
 	RunE: func(cmd *cobra.Command, args []string) (err error) {
+		_, sessionEnvExists := os.LookupEnv(incredibleSessionEnvironmentVariableName)
+		fmt.Println("Session exsists: ", sessionEnvExists)
+		if sessionEnvExists {
+			if confirmed, err := logging.Interactive.Confirm(runNested); err != nil || !confirmed {
+				if err != nil {
+					return err
+				}
+				return fmt.Errorf("running a nested incredible instance has been aborted")
+			}
+		}
 		ctx := context.TODO()
-
 		manifest, err := loader.DefaultLoader()
 		if err != nil {
 			return err
@@ -78,17 +98,19 @@ secret itself or pointing to a file containing it.`,
 			return err
 		}
 
-		customizer, err := exec.LoadSources(ctx, manifest)
+		cmdCustomizer, err := exec.LoadSources(ctx, manifest)
 		if err != nil {
 			return err
 		}
+		cmdCustomizer = cmdCustomizer.Append(customizer.FixedEnvValue(incredibleSessionEnvironmentVariableName, "true"))
+
 		childCmd := exec2.CommandContext(ctx, args[0], args[1:]...)
 		childCmd.Stdout = os.Stdout
 		childCmd.Stdin = os.Stdin
 		childCmd.Stderr = os.Stderr
 		childCmd.Env = childCmd.Environ()
 
-		cleanup, err := customizer(childCmd)
+		cleanup, err := cmdCustomizer(childCmd)
 		if cleanup != nil {
 			defer func() {
 				if cleanupErr := cleanup(childCmd); cleanupErr != nil {

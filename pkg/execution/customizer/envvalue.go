@@ -13,7 +13,13 @@ func EnvValue(ctx context.Context, name string, source source.ValueSource) Custo
 		if err != nil {
 			return nil, err
 		}
-		cmd.Env = append(cmd.Env, fmt.Sprintf("%s=%s", name, val))
+		return FixedEnvValue(name, val)(cmd)
+	}
+}
+
+func FixedEnvValue(name string, value string) Customizer {
+	return func(cmd *exec.Cmd) (Cleanup, error) {
+		cmd.Env = append(cmd.Env, fmt.Sprintf("%s=%s", name, value))
 		return nil, nil
 	}
 }
