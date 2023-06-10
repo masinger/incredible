@@ -7,6 +7,7 @@ import (
 	"github.com/masinger/incredible/internal/interactive/pterm"
 	zap2 "github.com/masinger/incredible/internal/interactive/zap"
 	"github.com/masinger/incredible/pkg/execution"
+	customizer "github.com/masinger/incredible/pkg/execution/customizer"
 	"github.com/masinger/incredible/pkg/logging"
 	"github.com/masinger/incredible/pkg/provider"
 	"github.com/masinger/incredible/pkg/specs/loader"
@@ -19,6 +20,8 @@ import (
 var debug bool
 var nonInteractive bool
 var executionOptions = execution.Options{}
+
+const incredibleSessionEnvironmentVariableName = "INCREDIBLE_SESSION"
 
 var rootCmd = &cobra.Command{
 	Use: "incredible <CMD>",
@@ -59,7 +62,6 @@ secret itself or pointing to a file containing it.`,
 	},
 	RunE: func(cmd *cobra.Command, args []string) (err error) {
 		ctx := context.TODO()
-
 		manifest, err := loader.DefaultLoader()
 		if err != nil {
 			return err
@@ -78,17 +80,19 @@ secret itself or pointing to a file containing it.`,
 			return err
 		}
 
-		customizer, err := exec.LoadSources(ctx, manifest)
+		cmdCustomizer, err := exec.LoadSources(ctx, manifest)
 		if err != nil {
 			return err
 		}
+		cmdCustomizer = cmdCustomizer.Append(customizer.FixedEnvValue(incredibleSessionEnvironmentVariableName, "true"))
+
 		childCmd := exec2.CommandContext(ctx, args[0], args[1:]...)
 		childCmd.Stdout = os.Stdout
 		childCmd.Stdin = os.Stdin
 		childCmd.Stderr = os.Stderr
 		childCmd.Env = childCmd.Environ()
 
-		cleanup, err := customizer(childCmd)
+		cleanup, err := cmdCustomizer(childCmd)
 		if cleanup != nil {
 			defer func() {
 				if cleanupErr := cleanup(childCmd); cleanupErr != nil {
