@@ -17,17 +17,21 @@ import (
 var debug bool
 var executionOptions = execution.Options{}
 
-// rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
-	Use:   "incredible",
-	Short: "A brief description of your application",
-	Args:  cobra.MinimumNArgs(1),
-	Long: `A longer description that spans multiple lines and likely contains
-examples and usage of using your application. For example:
+	Use: "incredible <CMD>",
+	Example: `# The following will run a new instance of bash, having access to all mapped environment variables:
+incredible bash
 
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
+#Similar, the following will run kubectl with a KUBECONFIG sourced from a secret source:
+incredible kubectl get pod `,
+	Short: "Runs the provided command with environment variables and temporary files sourced from a safe source",
+	Args:  cobra.MinimumNArgs(1),
+	Long: `Incredible is a helper tool, that helps users to obtain secret values from a safe source
+(e.g. password managers like Bitwarden, Cloud Stores like Azure Key Vaults and others).
+
+A common way to provide access tokens, passwords, certificates 
+and other secrets, is by using an environment variable holding the required
+secret itself or pointing to a file containing it.`,
 	PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
 		var logger *zap.Logger
 		var err error
@@ -88,8 +92,6 @@ to quickly create a Cobra application.`,
 	},
 }
 
-// Execute adds all child commands to the root command and sets flags appropriately.
-// This is called by main.main(). It only needs to happen once to the rootCmd.
 func Execute() {
 	err := rootCmd.Execute()
 	if err != nil {
@@ -98,13 +100,5 @@ func Execute() {
 }
 
 func init() {
-	// Here you will define your flags and configuration settings.
-	// Cobra supports persistent flags, which, if defined here,
-	// will be global for your application.
-
-	// rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.incredible.yaml)")
-
-	// Cobra also supports local flags, which will only run
-	// when this action is called directly.
-	rootCmd.PersistentFlags().BoolVar(&debug, "debug", false, "Set this flag to enable debug output.")
+	rootCmd.PersistentFlags().BoolVar(&debug, "debug", false, "If present, debug output is enabled.")
 }
