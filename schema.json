@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://github.com/masinger/incredible/schema.json",
+  "$id": "https://raw.githubusercontent.com/masinger/incredible/main/schema.json",
   "title": "Incredible settings file",
   "type": "object",
   "properties": {

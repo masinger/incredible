@@ -58,6 +58,8 @@ assets: # List of all assets to be loaded
           name: TARGET_VARIABLE # the name of the environment variable, that should hold the obtained secret
 ````
 
+The JSON schema at https://raw.githubusercontent.com/masinger/incredible/main/schema.json can be used to enable code completion and validation (if supported by your editor).
+
 See [Sources](#sources) for more information on how to configure the `src` property.
 
 
@@ -127,7 +129,7 @@ assets:
           name: MY_SECRET_FILE_PATH
 ````
 
-### Azure Key Value
+### Azure Key Vault
 
 #### Requirements
 
