@@ -4,6 +4,8 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/masinger/incredible/internal/interactive/pterm"
+	zap2 "github.com/masinger/incredible/internal/interactive/zap"
 	"github.com/masinger/incredible/pkg/execution"
 	"github.com/masinger/incredible/pkg/logging"
 	"github.com/masinger/incredible/pkg/provider"
@@ -15,6 +17,7 @@ import (
 )
 
 var debug bool
+var nonInteractive bool
 var executionOptions = execution.Options{}
 
 var rootCmd = &cobra.Command{
@@ -45,6 +48,13 @@ secret itself or pointing to a file containing it.`,
 		}
 		logging.Logger = logger.Sugar()
 		executionOptions.Log = logging.Logger
+
+		if nonInteractive {
+			logging.Interactive = zap2.NewZapInteractive(logging.Logger.Desugar())
+		} else {
+			logging.Interactive = pterm.NewPtermInteractive()
+		}
+
 		return nil
 	},
 	RunE: func(cmd *cobra.Command, args []string) (err error) {
@@ -57,6 +67,8 @@ secret itself or pointing to a file containing it.`,
 		if manifest == nil {
 			return fmt.Errorf("could not find incredible manifest")
 		}
+
+		action := logging.Interactive.StartAction("Incredible is loading your environment")
 
 		exec, err := execution.NewExecution(
 			provider.Providers,
@@ -88,6 +100,7 @@ secret itself or pointing to a file containing it.`,
 			return err
 		}
 
+		action.Complete("Done loading your environment.")
 		return childCmd.Run()
 	},
 }
@@ -101,4 +114,5 @@ func Execute() {
 
 func init() {
 	rootCmd.PersistentFlags().BoolVar(&debug, "debug", false, "If present, debug output is enabled.")
+	rootCmd.PersistentFlags().BoolVar(&nonInteractive, "non-interactive", false, "If present, interactive mode is disabled.")
 }
