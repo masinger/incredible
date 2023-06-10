@@ -129,7 +129,7 @@ assets:
           name: MY_SECRET_FILE_PATH
 ````
 
-### Azure Key Value
+### Azure Key Vault
 
 #### Requirements
 
