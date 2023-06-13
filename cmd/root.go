@@ -4,7 +4,11 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/masinger/incredible/internal/interactive"
+	"github.com/masinger/incredible/internal/interactive/pterm"
+	zap2 "github.com/masinger/incredible/internal/interactive/zap"
 	"github.com/masinger/incredible/pkg/execution"
+	customizer "github.com/masinger/incredible/pkg/execution/customizer"
 	"github.com/masinger/incredible/pkg/logging"
 	"github.com/masinger/incredible/pkg/provider"
 	"github.com/masinger/incredible/pkg/specs/loader"
@@ -15,19 +19,33 @@ import (
 )
 
 var debug bool
+var nonInteractive bool
 var executionOptions = execution.Options{}
 
-// rootCmd represents the base command when called without any subcommands
-var rootCmd = &cobra.Command{
-	Use:   "incredible",
-	Short: "A brief description of your application",
-	Args:  cobra.MinimumNArgs(1),
-	Long: `A longer description that spans multiple lines and likely contains
-examples and usage of using your application. For example:
+var runNested = interactive.Confirmation{
+	Message: `It seems like you are trying to run incredible within a process that has already been started by incredible.
 
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
+Do you wish to continue?`,
+	Default: true,
+}
+
+const incredibleSessionEnvironmentVariableName = "INCREDIBLE_SESSION"
+
+var rootCmd = &cobra.Command{
+	Use: "incredible <CMD>",
+	Example: `# The following will run a new instance of bash, having access to all mapped environment variables:
+incredible bash
+
+#Similar, the following will run kubectl with a KUBECONFIG sourced from a secret source:
+incredible kubectl get pod `,
+	Short: "Runs the provided command with environment variables and temporary files sourced from a safe source",
+	Args:  cobra.MinimumNArgs(1),
+	Long: `Incredible is a helper tool, that helps users to obtain secret values from a safe source
+(e.g. password managers like Bitwarden, Cloud Stores like Azure Key Vaults and others).
+
+A common way to provide access tokens, passwords, certificates 
+and other secrets, is by using an environment variable holding the required
+secret itself or pointing to a file containing it.`,
 	PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
 		var logger *zap.Logger
 		var err error
@@ -41,11 +59,27 @@ to quickly create a Cobra application.`,
 		}
 		logging.Logger = logger.Sugar()
 		executionOptions.Log = logging.Logger
+
+		if nonInteractive {
+			logging.Interactive = zap2.NewZapInteractive(logging.Logger.Desugar())
+		} else {
+			logging.Interactive = pterm.NewPtermInteractive()
+		}
+
 		return nil
 	},
 	RunE: func(cmd *cobra.Command, args []string) (err error) {
+		_, sessionEnvExists := os.LookupEnv(incredibleSessionEnvironmentVariableName)
+		fmt.Println("Session exsists: ", sessionEnvExists)
+		if sessionEnvExists {
+			if confirmed, err := logging.Interactive.Confirm(runNested); err != nil || !confirmed {
+				if err != nil {
+					return err
+				}
+				return fmt.Errorf("running a nested incredible instance has been aborted")
+			}
+		}
 		ctx := context.TODO()
-
 		manifest, err := loader.DefaultLoader()
 		if err != nil {
 			return err
@@ -53,6 +87,8 @@ to quickly create a Cobra application.`,
 		if manifest == nil {
 			return fmt.Errorf("could not find incredible manifest")
 		}
+
+		action := logging.Interactive.StartAction("Incredible is loading your environment")
 
 		exec, err := execution.NewExecution(
 			provider.Providers,
@@ -62,17 +98,19 @@ to quickly create a Cobra application.`,
 			return err
 		}
 
-		customizer, err := exec.LoadSources(ctx, manifest)
+		cmdCustomizer, err := exec.LoadSources(ctx, manifest)
 		if err != nil {
 			return err
 		}
+		cmdCustomizer = cmdCustomizer.Append(customizer.FixedEnvValue(incredibleSessionEnvironmentVariableName, "true"))
+
 		childCmd := exec2.CommandContext(ctx, args[0], args[1:]...)
 		childCmd.Stdout = os.Stdout
 		childCmd.Stdin = os.Stdin
 		childCmd.Stderr = os.Stderr
 		childCmd.Env = childCmd.Environ()
 
-		cleanup, err := customizer(childCmd)
+		cleanup, err := cmdCustomizer(childCmd)
 		if cleanup != nil {
 			defer func() {
 				if cleanupErr := cleanup(childCmd); cleanupErr != nil {
@@ -84,12 +122,11 @@ to quickly create a Cobra application.`,
 			return err
 		}
 
+		action.Complete("Done loading your environment.")
 		return childCmd.Run()
 	},
 }
 
-// Execute adds all child commands to the root command and sets flags appropriately.
-// This is called by main.main(). It only needs to happen once to the rootCmd.
 func Execute() {
 	err := rootCmd.Execute()
 	if err != nil {
@@ -98,13 +135,6 @@ func Execute() {
 }
 
 func init() {
-	// Here you will define your flags and configuration settings.
-	// Cobra supports persistent flags, which, if defined here,
-	// will be global for your application.
-
-	// rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.incredible.yaml)")
-
-	// Cobra also supports local flags, which will only run
-	// when this action is called directly.
-	rootCmd.PersistentFlags().BoolVar(&debug, "debug", false, "Set this flag to enable debug output.")
+	rootCmd.PersistentFlags().BoolVar(&debug, "debug", false, "If present, debug output is enabled.")
+	rootCmd.PersistentFlags().BoolVar(&nonInteractive, "non-interactive", false, "If present, interactive mode is disabled.")
 }
