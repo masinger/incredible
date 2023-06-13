@@ -1,0 +1,84 @@
+name: Release
+
+on:
+  push:
+    tags: [ "v*" ]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Set up Go
+        uses: actions/setup-go@v3
+        with:
+          go-version: 1.20.0
+
+      - name: Build
+        run: make build
+
+      - name: Create release
+        uses: actions/create-release@v1
+        id: create_release
+        with:
+          draft: false
+          prerelease: false
+          release_name: ${{ github.ref_name }}
+          tag_name: ${{ github.ref }}
+          body: |
+            Refer to this version's entry within the [CHANGELOG.md](CHANGELOG.md) for further release information.
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+
+      - name: Upload Linux x64 artifact
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./bin/incredible-linux-amd64
+          asset_name: incredible-linux-amd64
+          asset_content_type: application/x-elf
+
+      - name: Upload Linux arm64 artifact
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./bin/incredible-linux-arm64
+          asset_name: incredible-linux-arm64
+          asset_content_type: application/x-elf
+
+      - name: Upload Windows x64 artifact
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./bin/incredible-windows-amd64.exe
+          asset_name: incredible-windows-amd64.exe
+          asset_content_type: application/x-msdownload
+
+      - name: Upload MacOS amd64 artifact
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./bin/incredible-darwin-amd64
+          asset_name: incredible-darwin-amd64
+          asset_content_type: application/octet-stream
+
+      - name: Upload MacOS arm64 artifact
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./bin/incredible-darwin-arm64
+          asset_name: incredible-darwin-arm64
+          asset_content_type: application/octet-steam
