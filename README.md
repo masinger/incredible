@@ -145,7 +145,7 @@ az keyvault secrete show --vault-name <NAME_OF_YOUR_KEYVAULT> --name <NAME_OF_YO
 
 > **Warning**
 > The returned entry id statically refers to the current secret's version.
-> In order to always use the current version, omit the last path segment.
+> In order to always use the newest version, the last path segment can be omitted.
 
 The following mapping will load the newest value of an Azure Key Vault secret and store it within the environment variable `MY_SECRET_VALUE`:
 ````yaml
