@@ -10,9 +10,16 @@ type zapInteractive struct {
 	logger *zap.Logger
 }
 
+func (z *zapInteractive) Input(input interactive.Input) (string, error) {
+	if input.DisableDefault {
+		return "", fmt.Errorf("can't resolve input: %w", interactive.NonInteractive)
+	}
+	return input.Default, nil
+}
+
 func (z *zapInteractive) Confirm(confirmation interactive.Confirmation) (bool, error) {
 	if confirmation.DisableDefault {
-		return false, fmt.Errorf("non interactive session")
+		return false, interactive.NonInteractive
 	}
 	return confirmation.Default, nil
 }

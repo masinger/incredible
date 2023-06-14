@@ -13,5 +13,5 @@ type Provider interface {
 	SupportsSource(src *specs.Source) bool
 	Initialize(ctx context.Context, runtime *Runtime) error
 	PrepareUsage(ctx context.Context) error
-	Open(ctx context.Context, src *specs.Source) source.Source
+	Open(ctx context.Context, src *specs.Source) (source.Source, error)
 }
