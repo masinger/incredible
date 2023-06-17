@@ -179,3 +179,19 @@ assets:
 ````
 
 ### LastPass
+> **Warning**
+> LastPass support is provided by the open source GO library [asnd/lastpass-go](https://github.com/ansd/lastpass-go).
+> Even though LastPass seems to have had an official CLI client, it is currently unmaintained/abandoned (see [lastpass/lastpass-cli issue #602](https://github.com/lastpass/lastpass-cli/issues/602)).
+
+In order to use a username or password obtained from a LastPass account entry, it's ID is required.
+
+```yaml
+assets:
+  - src: 
+      lastpass: 
+        field: password # "username" or "password", default: "password" 
+        id: 000-00-0000-000 # LastPass entry id
+    mappings:
+      - env:
+          AWS_CLIENT_SECRET
+```
