@@ -19,9 +19,9 @@ type BinarySource interface {
 }
 
 type StaticValueSource struct {
-	Value string
+	Value *string
 }
 
 func (s StaticValueSource) Get(_ context.Context) (string, error) {
-	return s.Value, nil
+	return *s.Value, nil
 }

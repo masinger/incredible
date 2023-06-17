@@ -105,16 +105,20 @@ func (e Execution) LoadSources(
 		}
 		binarySource, isBinarySource := loadedSrc.(source.BinarySource)
 		if isBinarySource {
-			// TODO: Caching?
+			var path string
+			customizers = append(
+				customizers,
+				customizer.TempFile(ctx, binarySource, &path),
+			)
 			for _, mapping := range asset.Mappings {
 				currentMapping := mapping
 				if currentMapping.Env != nil {
 					customizers = append(
 						customizers,
-						customizer.TempFile(
+						customizer.EnvValue(
 							ctx,
-							binarySource,
 							currentMapping.Env.Name,
+							source.StaticValueSource{Value: &path},
 						),
 					)
 				}
