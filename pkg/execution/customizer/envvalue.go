@@ -7,13 +7,27 @@ import (
 	"os/exec"
 )
 
-func EnvValue(ctx context.Context, name string, source source.ValueSource) Customizer {
+func LoadValue(
+	ctx context.Context,
+	source source.ValueSource,
+	target *string,
+) Customizer {
 	return func(cmd *exec.Cmd) (Cleanup, error) {
-		val, err := source.Get(ctx)
+		value, err := source.Get(ctx)
 		if err != nil {
 			return nil, err
 		}
-		return FixedEnvValue(name, val)(cmd)
+		*target = value
+		return func(cmd *exec.Cmd) error {
+			*target = ""
+			return nil
+		}, nil
+	}
+}
+
+func EnvValue(name string, src *string) Customizer {
+	return func(cmd *exec.Cmd) (Cleanup, error) {
+		return FixedEnvValue(name, *src)(cmd)
 	}
 }
 

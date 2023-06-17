@@ -105,30 +105,37 @@ func (e Execution) LoadSources(
 		}
 		binarySource, isBinarySource := loadedSrc.(source.BinarySource)
 		if isBinarySource {
-			// TODO: Caching?
-			for _, mapping := range asset.Mappings {
-				currentMapping := mapping
-				if currentMapping.Env != nil {
-					customizers = append(
-						customizers,
-						customizer.TempFile(
-							ctx,
-							binarySource,
-							currentMapping.Env.Name,
-						),
-					)
-				}
-			}
-		} else if valueSource, isValueSource := loadedSrc.(source.ValueSource); isValueSource {
+			var path string
+			customizers = append(
+				customizers,
+				customizer.TempFile(ctx, binarySource, &path),
+			)
 			for _, mapping := range asset.Mappings {
 				currentMapping := mapping
 				if currentMapping.Env != nil {
 					customizers = append(
 						customizers,
 						customizer.EnvValue(
-							ctx,
+							currentMapping.Env.Name,
+							&path,
+						),
+					)
+				}
+			}
+		} else if valueSource, isValueSource := loadedSrc.(source.ValueSource); isValueSource {
+			var value string
+			customizers = append(
+				customizers,
+				customizer.LoadValue(ctx, valueSource, &value),
+			)
+			for _, mapping := range asset.Mappings {
+				currentMapping := mapping
+				if currentMapping.Env != nil {
+					customizers = append(
+						customizers,
+						customizer.EnvValue(
 							mapping.Env.Name,
-							valueSource,
+							&value,
 						),
 					)
 				}

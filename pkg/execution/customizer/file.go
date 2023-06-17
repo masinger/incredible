@@ -64,29 +64,18 @@ func File(
 func TempFile(
 	ctx context.Context,
 	src source.BinarySource,
-	envName string,
+	nameTarget *string,
 ) Customizer {
 	return func(cmd *exec.Cmd) (Cleanup, error) {
 		tempFile, err := os.CreateTemp("", "")
 		if err != nil {
 			return nil, err
 		}
-
-		var customizers Customizers
-		customizers = append(
-			customizers,
-			file(
-				ctx,
-				src,
-				tempFile,
-			),
-			EnvValue(
-				ctx,
-				envName,
-				source.StaticValueSource{Value: tempFile.Name()},
-			),
-		)
-
-		return customizers.Apply(cmd)
+		*nameTarget = tempFile.Name()
+		return file(
+			ctx,
+			src,
+			tempFile,
+		)(cmd)
 	}
 }
