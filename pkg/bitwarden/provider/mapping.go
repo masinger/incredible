@@ -10,12 +10,12 @@ var fieldMapping = &field.Mapping[Item]{
 		if item.Login == nil {
 			return "", fmt.Errorf("no password found for entry")
 		}
-		return item.Login.Password, nil
+		return item.Login.Username, nil
 	},
 	Password: func(item Item) (string, error) {
 		if item.Login == nil {
 			return "", fmt.Errorf("no username found for entry")
 		}
-		return item.Login.Username, nil
+		return item.Login.Password, nil
 	},
 }
