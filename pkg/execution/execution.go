@@ -116,23 +116,26 @@ func (e Execution) LoadSources(
 					customizers = append(
 						customizers,
 						customizer.EnvValue(
-							ctx,
 							currentMapping.Env.Name,
-							source.StaticValueSource{Value: &path},
+							&path,
 						),
 					)
 				}
 			}
 		} else if valueSource, isValueSource := loadedSrc.(source.ValueSource); isValueSource {
+			var value string
+			customizers = append(
+				customizers,
+				customizer.LoadValue(ctx, valueSource, &value),
+			)
 			for _, mapping := range asset.Mappings {
 				currentMapping := mapping
 				if currentMapping.Env != nil {
 					customizers = append(
 						customizers,
 						customizer.EnvValue(
-							ctx,
 							mapping.Env.Name,
-							valueSource,
+							&value,
 						),
 					)
 				}
