@@ -87,7 +87,7 @@ func (e Execution) LoadSources(
 		}
 	}
 
-	for providerToBeUsed, _ := range providersToBeUsed {
+	for providerToBeUsed := range providersToBeUsed {
 		err := providerToBeUsed.provider.PrepareUsage(ctx)
 		if err != nil {
 			return nil, err
@@ -99,7 +99,10 @@ func (e Execution) LoadSources(
 	for _, asset := range manifest.Assets {
 		currentAsset := asset
 		srcProvider := srcProviders[asset.Src]
-		loadedSrc := srcProvider.provider.Open(ctx, &currentAsset.Src)
+		loadedSrc, err := srcProvider.provider.Open(ctx, &currentAsset.Src)
+		if err != nil {
+			return nil, err
+		}
 		binarySource, isBinarySource := loadedSrc.(source.BinarySource)
 		if isBinarySource {
 			// TODO: Caching?

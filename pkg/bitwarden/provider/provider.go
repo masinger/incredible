@@ -2,7 +2,6 @@ package provider
 
 import (
 	"context"
-	bitwardenSpecs "github.com/masinger/incredible/pkg/bitwarden/specs"
 	"github.com/masinger/incredible/pkg/cli"
 	"github.com/masinger/incredible/pkg/provider"
 	"github.com/masinger/incredible/pkg/provider/source"
@@ -20,7 +19,7 @@ func (p *Provider) Name() string {
 	return "bitwarden"
 }
 
-func (p *Provider) Initialize(ctx context.Context, runtime *provider.Runtime) error {
+func (p *Provider) Initialize(_ context.Context, runtime *provider.Runtime) error {
 	_, err := exec.LookPath("bw")
 	if err != nil {
 		return provider.NewProviderUnavailableErr(err)
@@ -49,36 +48,25 @@ func (p *Provider) PrepareUsage(ctx context.Context) error {
 	return nil
 }
 
-func (p *Provider) Open(ctx context.Context, src *specs.Source) source.Source {
+func (p *Provider) Open(_ context.Context, src *specs.Source) (source.Source, error) {
 	bwSrc := src.Bitwarden
 	if bwSrc.Attachment != nil {
 		return &fileSource{
 			sessionKey:     p.sessionKey,
 			itemId:         bwSrc.Entry,
 			attachmentName: *bwSrc.Attachment,
-		}
+		}, nil
 	} else {
-		var accessor fieldAccessor
-		var field = bitwardenSpecs.FieldPassword
-		if bwSrc.Field != nil {
-			field = *bwSrc.Field
-		}
-
-		switch field {
-		case bitwardenSpecs.FieldUsername:
-			accessor = FieldAccessorUsername
-			break
-		case bitwardenSpecs.FieldPassword:
-			fallthrough
-		default:
-			accessor = FieldAccessorPassword
+		accessor, err := fieldMapping.DefaultAccessor(bwSrc.Field)
+		if err != nil {
+			return nil, err
 		}
 		var valSource source.ValueSource = &valueSource{
 			sessionKey:    p.sessionKey,
 			itemId:        bwSrc.Entry,
 			fieldAccessor: accessor,
 		}
-		return valSource
+		return valSource, nil
 	}
 }
 

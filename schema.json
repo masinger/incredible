@@ -19,24 +19,33 @@
                       {
                         "type:": "object",
                         "properties": {
-                          "entry": { "type": "string" },
-                          "attachment": { "type": "string" }
+                          "entry": {
+                            "type": "string"
+                          },
+                          "attachment": {
+                            "type": "string"
+                          }
                         },
                         "additionalProperties": false,
-                        "required": ["entry", "attachment"]
+                        "required": [
+                          "entry",
+                          "attachment"
+                        ]
                       },
                       {
                         "type": "object",
                         "properties": {
-                          "entry": { "type": "string" },
+                          "entry": {
+                            "type": "string"
+                          },
                           "field": {
-                            "type": "string",
-                            "enum": [ "username", "password" ],
-                            "default": "password"
+                            "$ref": "#/$defs/secretField"
                           }
                         },
                         "additionalProperties": false,
-                        "required": ["entry"]
+                        "required": [
+                          "entry"
+                        ]
                       }
                     ]
                   }
@@ -63,6 +72,29 @@
                 "required": [
                   "azureKeyVaultSecret"
                 ]
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "lastpass": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string"
+                      },
+                      "field": {
+                        "$ref": "#/$defs/secretField"
+                      }
+                    },
+                    "required": [
+                      "id"
+                    ]
+                  }
+                },
+                "additionalProperties": false,
+                "required": [
+                  "lastpass"
+                ]
               }
             ]
           },
@@ -88,11 +120,24 @@
             }
           }
         },
-        "required": ["src", "mappings"]
+        "required": [
+          "src",
+          "mappings"
+        ]
       }
     }
   },
   "required": [
     "assets"
-  ]
+  ],
+  "$defs": {
+    "secretField": {
+      "type": "string",
+      "enum": [
+        "username",
+        "password"
+      ],
+      "default": "password"
+    }
+  }
 }

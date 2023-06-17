@@ -30,7 +30,7 @@ func (p *Provider) SupportsSource(src *specs.Source) bool {
 	return src.AzureKeyVaultSecret != nil
 }
 
-func (p *Provider) Initialize(ctx context.Context, runtime *provider.Runtime) error {
+func (p *Provider) Initialize(_ context.Context, _ *provider.Runtime) error {
 	_, err := exec.LookPath("az")
 	if err != nil {
 		return provider.NewProviderUnavailableErr(err)
@@ -43,13 +43,13 @@ func (p *Provider) PrepareUsage(ctx context.Context) error {
 	return client.login()
 }
 
-func (p *Provider) Open(ctx context.Context, src *specs.Source) source.Source {
+func (p *Provider) Open(_ context.Context, src *specs.Source) (source.Source, error) {
 	keyVaultSecretSource := src.AzureKeyVaultSecret
 
 	return &secretSource{
 		itemId:   keyVaultSecretSource.ItemId,
 		provider: p,
-	}
+	}, nil
 }
 
 func NewProvider() provider.Provider {

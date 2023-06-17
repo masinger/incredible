@@ -8,6 +8,17 @@ import (
 type ptermInteractive struct {
 }
 
+func (p ptermInteractive) Input(input interactive.Input) (string, error) {
+	printer := &pterm.DefaultInteractiveTextInput
+	if !input.DisableDefault {
+		printer = printer.WithDefaultText(input.Default)
+	}
+	if input.Masked {
+		printer = printer.WithMask("*")
+	}
+	return printer.Show(input.Message)
+}
+
 func (p ptermInteractive) Confirm(confirmation interactive.Confirmation) (bool, error) {
 	return pterm.DefaultInteractiveConfirm.
 		WithDefaultValue(confirmation.Default).

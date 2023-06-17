@@ -2,8 +2,8 @@ package provider
 
 import (
 	"context"
-	"fmt"
 	"github.com/masinger/incredible/pkg/cli"
+	"github.com/masinger/incredible/pkg/specs/field"
 	"io"
 )
 
@@ -27,26 +27,10 @@ func (f fileSource) Read(ctx context.Context) (io.ReadCloser, error) {
 	return io.NopCloser(reader), err
 }
 
-type fieldAccessor func(item Item) (string, error)
-
-var FieldAccessorPassword fieldAccessor = func(item Item) (string, error) {
-	if item.Login == nil {
-		return "", fmt.Errorf("no password found for entry")
-	}
-	return item.Login.Password, nil
-}
-
-var FieldAccessorUsername fieldAccessor = func(item Item) (string, error) {
-	if item.Login == nil {
-		return "", fmt.Errorf("no username found for entry")
-	}
-	return item.Login.Username, nil
-}
-
 type valueSource struct {
 	sessionKey    string
 	itemId        string
-	fieldAccessor fieldAccessor
+	fieldAccessor field.Accessor[Item]
 }
 
 func (v valueSource) Get(ctx context.Context) (string, error) {
