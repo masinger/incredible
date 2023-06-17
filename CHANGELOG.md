@@ -8,9 +8,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ###  Added
-1. [provider] Add support for usernames and password fetched from LastPass
+1. [provider] Add support for usernames and password fetched from LastPass.
 ### Fixed
 ### Changed
+1. Loaded sources are now cached, when mapped to multiple environment variables.
+2. When mapping a binary source multiple times, the mapped environment variables will point to the same file.
 ### Removed
 
 <!-- Unreleased Template
