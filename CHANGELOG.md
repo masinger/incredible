@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ###  Added
+1. [provider] Add support for usernames and password fetched from LastPass
 ### Fixed
 ### Changed
 ### Removed
