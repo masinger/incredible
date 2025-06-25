@@ -6,7 +6,7 @@ require (
 	github.com/ansd/lastpass-go v0.4.0
 	github.com/pterm/pterm v0.12.67
 	github.com/spf13/cobra v1.7.0
-	go.uber.org/zap v1.25.0
+	go.uber.org/zap v1.27.0
 	gopkg.in/yaml.v3 v3.0.1
 )
 
