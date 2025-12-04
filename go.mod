@@ -5,7 +5,7 @@ go 1.20
 require (
 	github.com/ansd/lastpass-go v0.4.0
 	github.com/pterm/pterm v0.12.67
-	github.com/spf13/cobra v1.7.0
+	github.com/spf13/cobra v1.10.2
 	go.uber.org/zap v1.25.0
 	gopkg.in/yaml.v3 v3.0.1
 )
@@ -20,7 +20,7 @@ require (
 	github.com/lithammer/fuzzysearch v1.1.8 // indirect
 	github.com/mattn/go-runewidth v0.0.15 // indirect
 	github.com/rivo/uniseg v0.4.4 // indirect
-	github.com/spf13/pflag v1.0.5 // indirect
+	github.com/spf13/pflag v1.0.9 // indirect
 	github.com/xo/terminfo v0.0.0-20220910002029-abceb7e1c41e // indirect
 	go.uber.org/multierr v1.10.0 // indirect
 	golang.org/x/crypto v0.1.0 // indirect
