@@ -1,38 +1,60 @@
 package provider
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"github.com/masinger/incredible/pkg/cli"
 	"io"
 	"os"
+	"time"
 )
 
 type CliClient struct {
 	cli.Cli
 }
 
-func (b CliClient) isLoggedIn() bool {
-	return b.Cli.RunInheritStreams("login", "--check") == nil
+func newCliClient(ctx context.Context, timeout time.Duration) CliClient {
+	return CliClient{
+		cli.Cli{
+			Ctx:        ctx,
+			Executable: "bw",
+			Timeout:    timeout,
+		},
+	}
+}
+
+func (b CliClient) isLoggedIn() (bool, error) {
+	return cli.Succeeded(b.Cli.RunInheritStreams("login", "--check"))
 }
 
 func (b CliClient) login() (string, error) {
-	return b.Cli.RunReadStdout("login", "--raw")
+	// Prompts for the master password and 2FA, so no timeout.
+	return b.Cli.WithoutTimeout().RunReadStdout("login", "--raw")
 }
 
-func (b CliClient) isUnlocked() bool {
-	return b.Cli.RunInheritStreams("unlock", "--check") == nil
+func (b CliClient) isUnlocked() (bool, error) {
+	return cli.Succeeded(b.Cli.RunInheritStreams("unlock", "--check"))
 }
 
 func (b CliClient) unlock() (string, error) {
-	return b.Cli.RunReadStdout("unlock", "--raw")
+	// Prompts for the master password, so no timeout.
+	return b.Cli.WithoutTimeout().RunReadStdout("unlock", "--raw")
 }
 
 func (b CliClient) activeSession() (string, error) {
-	if !b.isLoggedIn() {
+	loggedIn, err := b.isLoggedIn()
+	if err != nil {
+		return "", err
+	}
+	if !loggedIn {
 		return b.login()
 	}
-	if !b.isUnlocked() {
+	unlocked, err := b.isUnlocked()
+	if err != nil {
+		return "", err
+	}
+	if !unlocked {
 		return b.unlock()
 	}
 	sessionKey := os.Getenv("BW_SESSION")

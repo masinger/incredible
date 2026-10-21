@@ -53,6 +53,10 @@ Additionally, the CLI client can be updated independently (assuming the command 
 If there is an official and maintained CLI client available for the three major platforms (Linux, Windows, macOS), this
 type of provider integration should be preferred.
 
+Calls to the CLI should be bounded by the timeout in `Runtime.Timeout` (see `cli.Cli.Timeout`), so a hanging CLI
+doesn't block `incredible` forever.
+Calls waiting for user input, like logins, must not time out and should use `cli.Cli.WithoutTimeout`.
+
 #### 2.1.2 In-process
 
 An in-process provider integration contains the functionality to interact with the provider's API within the

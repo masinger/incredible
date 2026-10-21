@@ -7,8 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 ###  Added
+1. `--provider-timeout` (default `2m`) limits how long non-interactive provider CLI calls (`bw`, `az`) may take. Logins and unlocks waiting for user input aren't limited.
 ### Fixed
+1. Provider CLI calls ignored their context, so a hanging provider blocked incredible forever. Pressing Ctrl-C while the environment is loading now stops the running provider call.
 ### Changed
+1. Go 1.26 or newer is required to build incredible; all dependencies have been updated.
 ### Removed
 
 <!-- Unreleased Template

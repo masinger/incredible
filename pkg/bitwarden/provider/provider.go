@@ -2,7 +2,6 @@ package provider
 
 import (
 	"context"
-	"github.com/masinger/incredible/pkg/cli"
 	"github.com/masinger/incredible/pkg/provider"
 	"github.com/masinger/incredible/pkg/provider/source"
 	"github.com/masinger/incredible/pkg/specs"
@@ -33,13 +32,7 @@ func (p *Provider) SupportsSource(src *specs.Source) bool {
 }
 
 func (p *Provider) PrepareUsage(ctx context.Context) error {
-	b := CliClient{
-		cli.Cli{
-			Ctx:        ctx,
-			Executable: "bw",
-		},
-	}
-	sessionKey, err := b.activeSession()
+	sessionKey, err := newCliClient(ctx, p.runtime.Timeout).activeSession()
 	if err != nil {
 		return err
 	}
@@ -55,6 +48,7 @@ func (p *Provider) Open(_ context.Context, src *specs.Source) (source.Source, er
 			sessionKey:     p.sessionKey,
 			itemId:         bwSrc.Entry,
 			attachmentName: *bwSrc.Attachment,
+			timeout:        p.runtime.Timeout,
 		}, nil
 	} else {
 		accessor, err := fieldMapping.DefaultAccessor(bwSrc.Field)
@@ -65,6 +59,7 @@ func (p *Provider) Open(_ context.Context, src *specs.Source) (source.Source, er
 			sessionKey:    p.sessionKey,
 			itemId:        bwSrc.Entry,
 			fieldAccessor: accessor,
+			timeout:       p.runtime.Timeout,
 		}
 		return valSource, nil
 	}

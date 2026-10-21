@@ -41,7 +41,8 @@ func NewExecution(
 		providerLogger := log.WithOptions(zap.Fields(zap.String("provider", name)))
 		providerLogger.Debug("Initializing provider")
 		providerRuntime := &provider.Runtime{
-			Log: providerLogger,
+			Log:     providerLogger,
+			Timeout: opts.ProviderTimeout,
 		}
 
 		err := currentProvider.Initialize(ctx, providerRuntime)

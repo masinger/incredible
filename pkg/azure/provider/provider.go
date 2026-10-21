@@ -18,6 +18,7 @@ func (p *Provider) client(ctx context.Context) *CliClient {
 		cli.Cli{
 			Ctx:        ctx,
 			Executable: "az",
+			Timeout:    p.runtime.Timeout,
 		},
 	}
 }
@@ -30,11 +31,12 @@ func (p *Provider) SupportsSource(src *specs.Source) bool {
 	return src.AzureKeyVaultSecret != nil
 }
 
-func (p *Provider) Initialize(_ context.Context, _ *provider.Runtime) error {
+func (p *Provider) Initialize(_ context.Context, runtime *provider.Runtime) error {
 	_, err := exec.LookPath("az")
 	if err != nil {
 		return provider.NewProviderUnavailableErr(err)
 	}
+	p.runtime = runtime
 	return nil
 }
 

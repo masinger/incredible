@@ -16,6 +16,9 @@ import (
 	"go.uber.org/zap"
 	"os"
 	exec2 "os/exec"
+	"os/signal"
+	"syscall"
+	"time"
 )
 
 var debug bool
@@ -47,6 +50,10 @@ A common way to provide access tokens, passwords, certificates
 and other secrets, is by using an environment variable holding the required
 secret itself or pointing to a file containing it.`,
 	PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
+		if executionOptions.ProviderTimeout < 0 {
+			return fmt.Errorf("--provider-timeout must not be negative, got %s", executionOptions.ProviderTimeout)
+		}
+
 		var logger *zap.Logger
 		var err error
 		if debug {
@@ -79,7 +86,11 @@ secret itself or pointing to a file containing it.`,
 				return fmt.Errorf("running a nested incredible instance has been aborted")
 			}
 		}
-		ctx := context.TODO()
+		// Ctrl-C while loading cancels ctx, which kills the running provider
+		// command, so the loaded secrets are cleaned up.
+		ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+		defer stop()
+		executionOptions.Context = ctx
 		manifest, err := loader.DefaultLoader()
 		if err != nil {
 			return err
@@ -104,7 +115,7 @@ secret itself or pointing to a file containing it.`,
 		}
 		cmdCustomizer = cmdCustomizer.Append(customizer.FixedEnvValue(incredibleSessionEnvironmentVariableName, "true"))
 
-		childCmd := exec2.CommandContext(ctx, args[0], args[1:]...)
+		childCmd := exec2.Command(args[0], args[1:]...)
 		childCmd.Stdout = os.Stdout
 		childCmd.Stdin = os.Stdin
 		childCmd.Stderr = os.Stderr
@@ -122,6 +133,9 @@ secret itself or pointing to a file containing it.`,
 			return err
 		}
 
+		// Loading is done, stop catching signals. Stopping cancels ctx, so the
+		// child must not use it.
+		stop()
 		action.Complete("Done loading your environment.")
 		return childCmd.Run()
 	},
@@ -137,4 +151,5 @@ func Execute() {
 func init() {
 	rootCmd.PersistentFlags().BoolVar(&debug, "debug", false, "If present, debug output is enabled.")
 	rootCmd.PersistentFlags().BoolVar(&nonInteractive, "non-interactive", false, "If present, interactive mode is disabled.")
+	rootCmd.PersistentFlags().DurationVar(&executionOptions.ProviderTimeout, "provider-timeout", 2*time.Minute, "Maximum duration of non-interactive provider CLI calls (0 disables the timeout).")
 }

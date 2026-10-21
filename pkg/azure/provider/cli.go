@@ -12,14 +12,18 @@ type CliClient struct {
 func (c CliClient) login() error {
 	// Check if we are logged in
 	_, err := c.Cli.RunReadStdout("account", "list")
-	if err == nil {
-		return nil
+	loggedIn, err := cli.Succeeded(err)
+	if err != nil || loggedIn {
+		return err
 	}
-	return c.Cli.RunInheritStreams("login")
+	// Opens a browser or device code flow, so no timeout.
+	return c.Cli.WithoutTimeout().RunInheritStreams("login")
 }
 
 func (c CliClient) readSecretById(id string) (*Secret, error) {
-	reader, err := c.Cli.RunRedirectStdout(
+	// Waits for az to exit, so it isn't killed while still running, and its
+	// exit status is checked.
+	output, err := c.Cli.RunReadStdout(
 		"keyvault",
 		"secret",
 		"show",
@@ -29,10 +33,9 @@ func (c CliClient) readSecretById(id string) (*Secret, error) {
 	if err != nil {
 		return nil, err
 	}
-	dec := json.NewDecoder(reader)
 	var secret Secret
-	if err = dec.Decode(&secret); err != nil {
+	if err = json.Unmarshal([]byte(output), &secret); err != nil {
 		return nil, err
 	}
-	return &secret, err
+	return &secret, nil
 }
