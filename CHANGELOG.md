@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ###  Added
 ### Fixed
 ### Changed
+1. Go 1.26 or newer is required to build incredible; all dependencies have been updated.
 ### Removed
 
 <!-- Unreleased Template

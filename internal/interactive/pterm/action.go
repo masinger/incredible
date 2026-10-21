@@ -8,7 +8,7 @@ type ptermAction struct {
 
 func (p ptermAction) Complete(message string) {
 	if message != "" {
-		pterm.Success.Printfln(message)
+		pterm.Success.Println(message)
 	} else {
 		pterm.Success.Printfln("Done: %s", p.message)
 	}
